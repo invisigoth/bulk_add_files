@@ -1,0 +1,6 @@
+bulk_add_files.add:
+  title: 'Bulk add files to media'
+  route_name: bulk_add_files.add
+  description: 'Bulk add existing files on the disk storage to Drupal media.'
+  parent: system.admin_config_media
+  weight: 99

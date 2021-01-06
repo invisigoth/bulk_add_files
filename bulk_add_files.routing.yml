@@ -1,0 +1,9 @@
+bulk_add_files.add:
+  path: '/admin/config/media/bulk-add-files'
+  defaults:
+    _form: '\Drupal\bulk_add_files\Form\BulkAddFilesForm'
+    _title: 'Bulk add existing disk files to media'
+  requirements:
+    _permission: 'administer media'
+  options:
+      _admin_route: TRUE

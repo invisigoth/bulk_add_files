@@ -1,0 +1,12 @@
+name: Bulk Add Files
+type: module
+description: Bulk add existing disk files to media
+core: 8.x
+core_version_requirement: ^8 || ^9
+package: Media
+dependencies:
+  - drupal:media
+
+version: '8.x-1.0'
+project: 'bulk_add_files'
+

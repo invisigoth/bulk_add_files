@@ -1,0 +1,79 @@
+<?php
+
+use Drupal\file\Entity\File;
+use Drupal\media\Entity\Media;
+
+function bulk_add_files_do() {
+  if ($_POST['path_to_files']) {
+
+    $image_files_found = \Drupal::service('file_system')->scanDirectory($_POST['path_to_files'], '~\.(jpeg|jpg|png|bmp|gif|svg)$~');
+    $total_image_added = 0;
+    if (is_array($image_files_found)) {
+      $total_image_added = _bulk_add_files_create($image_files_found, 'image');
+    }
+
+    $document_files_found = \Drupal::service('file_system')->scanDirectory($_POST['path_to_files'], '~\.(txt|rtf|doc|docx|ppt|pptx|xls|xlsx|pdf)$~');
+    $total_doc_added = 0;
+    if (is_array($document_files_found)) {
+      $total_doc_added = _bulk_add_files_create($document_files_found, 'document');
+    }
+    \Drupal::messenger()->addStatus('Successfully added '.$total_image_added.' images');
+    \Drupal::messenger()->addStatus('Successfully added '.$total_doc_added.' documents');
+  }
+}
+
+function _bulk_add_files_create($files_found, $bundle) {
+
+  $entity_count = 0;
+
+  foreach ($files_found as $file) {
+
+    $file_uri = $file->uri;
+    $file_name = $file->name;
+    $file_uri = str_replace('/Users/jason/Sites/drupal-migrate/sites/default/files/', 'public://', $file_uri);
+    $filesystem = \Drupal::service('file_system');
+
+    $f = File::create();
+    $f->setFileUri($file_uri);
+    $f->setOwnerId(\Drupal::currentUser()->id());
+    $f->setMimeType(pathinfo($file_uri, PATHINFO_EXTENSION));
+    $f->setFileName($filesystem->basename($file_uri));
+    $f->setPermanent();
+    $f->save();
+
+    $media_file = NULL;
+    $media_file_field = NULL;
+
+    if ($bundle == 'image') {
+      $media_file_field = 'field_media_image';
+      $media_file =  [
+        'target_id' => $f->id(),
+        'alt' => $file_name,
+        'title' => $file_name,
+      ];
+    }
+
+    if ($bundle == 'document') {
+      $media_file_field = 'field_media_document';
+      $media_file =  [
+        'target_id' => $f->id(),
+      ];
+    }
+
+    if ($media_file) {
+      $image_media = Media::create([
+        'bundle' => $bundle,
+        'uid' => \Drupal::currentUser()->id(),
+        'langcode' => \Drupal::languageManager()->getDefaultLanguage()->getId(),
+        'name' => $file_name,
+        'status' => 1,
+        $media_file_field => $media_file,
+    ]);
+      $image_media->save();
+      $entity_count ++;
+    }
+
+  }
+
+  return $entity_count;
+}
